@@ -21,6 +21,19 @@ const ENTRY =
 if (ENTRY.length > 200 || ENTRY.trim().length === 0) {
   throw new Error(`entry must be 1-200 chars, got ${ENTRY.length}`);
 }
+// Gate self-check, mirroring the sealed scorer: one line, one sentence.
+// A stray newline or a second sentence terminator would fail the gate,
+// so refuse to write anything that does not pass it.
+if (/[\r\n]/.test(ENTRY)) {
+  throw new Error("entry must be a single line");
+}
+const terminators = (ENTRY.match(/[.!?]/g) ?? []).length;
+if (terminators < 1) {
+  throw new Error("entry must end with a sentence terminator");
+}
+if (Buffer.from(ENTRY, "utf8").toString("utf8") !== ENTRY) {
+  throw new Error("entry must be valid UTF-8");
+}
 
 mkdirSync("/output", { recursive: true });
 writeFileSync("/output/entry.txt", ENTRY, "utf8");
